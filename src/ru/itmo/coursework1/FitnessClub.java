@@ -11,7 +11,7 @@ public class FitnessClub {
     private final LocalTime OPENING_TIME = LocalTime.parse("08:00:00");
     private final LocalTime END_OF_DAYTIME = LocalTime.parse("16:00:00");
     private final LocalTime CLOSING_TIME = LocalTime.parse("22:00:00");
-    private final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm");
+    private final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     public void addClient(Subscription subscription, Zone zone) {
@@ -146,7 +146,7 @@ public class FitnessClub {
                     return true;
                 }
                 if (LocalTime.now().isAfter(END_OF_DAYTIME)) {
-                    System.out.println("Your subscription is only valid until 4:00 p.m.");
+                    System.out.println("Your subscription is only valid until " + END_OF_DAYTIME.format(TIME_FORMATTER));
                     return true;
                 }
         }
