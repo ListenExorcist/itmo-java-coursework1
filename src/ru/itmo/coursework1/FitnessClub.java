@@ -8,117 +8,98 @@ public class FitnessClub {
     private Subscription[] gymSubscriptions = new Subscription[20];
     private Subscription[] swimmingPoolSubscriptions = new Subscription[20];
     private Subscription[] groupSessionSubscriptions = new Subscription[20];
-    private final LocalTime OPENING_TIME = LocalTime.parse("08:00:00");
-    private final LocalTime END_OF_DAYTIME = LocalTime.parse("16:00:00");
-    private final LocalTime CLOSING_TIME = LocalTime.parse("22:00:00");
     private final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     public void addClient(Subscription subscription, Zone zone) {
-        if (isClubClosed()) return;
+        if (isTimeNotCovered(subscription)) return;
         if (isExpired(subscription)) return;
         if (isZoneForbidden(subscription, zone)) return;
-        if (isZoneFull(zone)) return;
-        if (isAlreadyRegistered(subscription)) return;
         switch (zone) {
             case GYM:
-                for (int i = 0; i < gymSubscriptions.length; i++) {
-                    if (gymSubscriptions[i] == null) {
-                        gymSubscriptions[i] = subscription;
-                        displayAddedClientInfo(subscription, zone);
-                        return;
-                    }
-                }
+                if (isZoneFull(gymSubscriptions)) return;
                 break;
             case SWIMMING_POOL:
-                for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-                    if (swimmingPoolSubscriptions[i] == null) {
-                        swimmingPoolSubscriptions[i] = subscription;
-                        displayAddedClientInfo(subscription, zone);
-                        return;
-                    }
-                }
+                if (isZoneFull(swimmingPoolSubscriptions)) return;
                 break;
             case GROUP_SESSION:
-                for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-                    if (groupSessionSubscriptions[i] == null) {
-                        groupSessionSubscriptions[i] = subscription;
-                        displayAddedClientInfo(subscription, zone);
-                        return;
-                    }
-                }
+                if (isZoneFull(groupSessionSubscriptions)) return;
+        }
+        if (isAlreadyRegistered(subscription)) return;
+        switch (zone) {
+            case GYM -> addClientToZone(subscription, gymSubscriptions, Zone.GYM);
+            case SWIMMING_POOL -> addClientToZone(subscription, swimmingPoolSubscriptions, Zone.SWIMMING_POOL);
+            case GROUP_SESSION -> addClientToZone(subscription, groupSessionSubscriptions, Zone.GROUP_SESSION);
         }
     }
 
     public void removeClient(Subscription subscription) {
-        for (int i = 0; i < gymSubscriptions.length; i++) {
-            if (subscription.equals(gymSubscriptions[i])) {
-                gymSubscriptions[i] = null;
-                displayRemovedClientInfo(subscription, Zone.GYM);
-                return;
-            }
-        }
-        for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-            if (subscription.equals(swimmingPoolSubscriptions[i])) {
-                swimmingPoolSubscriptions[i] = null;
-                displayRemovedClientInfo(subscription, Zone.SWIMMING_POOL);
-                return;
-            }
-        }
-        for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-            if (subscription.equals(groupSessionSubscriptions[i])) {
-                groupSessionSubscriptions[i] = null;
-                displayRemovedClientInfo(subscription, Zone.GROUP_SESSION);
-                return;
-            }
-        }
+        if (removeClientFromZone(subscription, gymSubscriptions, Zone.GYM)) return;
+        if (removeClientFromZone(subscription, swimmingPoolSubscriptions, Zone.SWIMMING_POOL)) return;
+        if (removeClientFromZone(subscription, groupSessionSubscriptions, Zone.GROUP_SESSION)) return;
         System.out.println("This client is not currently registered");
     }
 
     public void displayRegisteredClientsInfo() {
         System.out.println("Clients currently registered in the gym:");
-        for (int i = 0; i < gymSubscriptions.length; i++) {
-            if (gymSubscriptions[i] != null) {
-                System.out.println(gymSubscriptions[i]);
-            }
-        }
+        displayRegisteredInZoneClientsInfo(gymSubscriptions);
         System.out.println();
         System.out.println("Clients currently registered in the swimming pool:");
-        for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-            if (swimmingPoolSubscriptions[i] != null) {
-                System.out.println(swimmingPoolSubscriptions[i]);
-            }
-        }
+        displayRegisteredInZoneClientsInfo(swimmingPoolSubscriptions);
         System.out.println();
         System.out.println("Clients currently registered in the group session:");
-        for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-            if (groupSessionSubscriptions[i] != null) {
-                System.out.println(groupSessionSubscriptions[i]);
-            }
-        }
+        displayRegisteredInZoneClientsInfo(groupSessionSubscriptions);
     }
 
     public void close() {
-        for (int i = 0; i < gymSubscriptions.length; i++) {
-            if (gymSubscriptions[i] != null) {
-                removeClient(gymSubscriptions[i]);
-            }
-        }
-        for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-            if (swimmingPoolSubscriptions[i] != null) {
-                removeClient(swimmingPoolSubscriptions[i]);
-            }
-        }
-        for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-            if (groupSessionSubscriptions[i] != null) {
-                removeClient(groupSessionSubscriptions[i]);
+        clearZone(gymSubscriptions);
+        clearZone(swimmingPoolSubscriptions);
+        clearZone(groupSessionSubscriptions);
+    }
+
+    private void addClientToZone(Subscription subscription, Subscription[] zoneArray, Zone zone) {
+        for (int i = 0; i < zoneArray.length; i++) {
+            if (zoneArray[i] == null) {
+                zoneArray[i] = subscription;
+                displayAddedClientInfo(subscription, zone);
+                return;
             }
         }
     }
 
-    private boolean isClubClosed() {
-        if (LocalTime.now().isBefore(OPENING_TIME) || LocalTime.now().isAfter(CLOSING_TIME)) {
-            System.out.println("Fitness club is closed");
+    private boolean removeClientFromZone(Subscription subscription, Subscription[] zoneArray, Zone zone) {
+        for (int i = 0; i < zoneArray.length; i++) {
+            if (subscription.equals(zoneArray[i])) {
+                zoneArray[i] = null;
+                displayRemovedClientInfo(subscription, zone);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void displayRegisteredInZoneClientsInfo(Subscription[] zone) {
+        for (int i = 0; i < zone.length; i++) {
+            if (zone[i] != null) {
+                System.out.println(zone[i]);
+            }
+        }
+    }
+
+    private void clearZone(Subscription[] zone) {
+        for (int i = 0; i < zone.length; i++) {
+            if (zone[i] != null) {
+                removeClient(zone[i]);
+            }
+        }
+    }
+
+    private boolean isTimeNotCovered(Subscription subscription) {
+        if (LocalTime.now().isBefore(subscription.getSubscriptionType().getAvailableTimeBegin()) ||
+                LocalTime.now().isAfter(subscription.getSubscriptionType().getAvailableTimeEnd())) {
+            System.out.println("Your subscription is only valid from " +
+                    subscription.getSubscriptionType().getAvailableTimeBegin().format(TIME_FORMATTER) +
+                    " to " + subscription.getSubscriptionType().getAvailableTimeEnd().format(TIME_FORMATTER));
             return true;
         }
         return false;
@@ -133,69 +114,36 @@ public class FitnessClub {
     }
 
     private boolean isZoneForbidden(Subscription subscription, Zone zone) {
-        switch (subscription.getSubscriptionType()) {
-            case ONE_TIME:
-                if (zone == Zone.GROUP_SESSION) {
-                    System.out.println("Group sessions are not covered by your subscription");
-                    return true;
-                }
-                break;
-            case DAYTIME:
-                if (zone == Zone.SWIMMING_POOL) {
-                    System.out.println("Swimming pool is not covered by your subscription");
-                    return true;
-                }
-                if (LocalTime.now().isAfter(END_OF_DAYTIME)) {
-                    System.out.println("Your subscription is only valid until " + END_OF_DAYTIME.format(TIME_FORMATTER));
-                    return true;
-                }
+        for (int i = 0; i < subscription.getSubscriptionType().getAvailableZones().length; i++) {
+            if (zone == subscription.getSubscriptionType().getAvailableZones()[i]) return false;
         }
-        return false;
+        System.out.println("Zone you are trying to attend is not covered by your subscription");
+        return true;
     }
 
-    private boolean isZoneFull(Zone zone) {
-        switch (zone) {
-            case GYM:
-                for (int i = 0; i < gymSubscriptions.length; i++) {
-                    if (gymSubscriptions[i] == null) {
-                        return false;
-                    }
-                }
-                break;
-            case SWIMMING_POOL:
-                for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-                    if (swimmingPoolSubscriptions[i] == null) {
-                        return false;
-                    }
-                }
-                break;
-            case GROUP_SESSION:
-                for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-                    if (groupSessionSubscriptions[i] == null) {
-                        return false;
-                    }
-                }
+    private boolean isZoneFull(Subscription[] zone) {
+        for (int i = 0; i < zone.length; i++) {
+            if (zone[i] == null) {
+                return false;
+            }
         }
         System.out.println("Zone you are trying to attend is full");
         return true;
     }
 
     private boolean isAlreadyRegistered(Subscription subscription) {
-        for (int i = 0; i < gymSubscriptions.length; i++) {
-            if (subscription.equals(gymSubscriptions[i])) {
-                System.out.println("You are already registered in the gym");
-                return true;
-            }
+        if (isAlreadyRegisteredInZone(subscription, gymSubscriptions) ||
+                isAlreadyRegisteredInZone(subscription, swimmingPoolSubscriptions) ||
+                isAlreadyRegisteredInZone(subscription, groupSessionSubscriptions)) {
+            System.out.println("You are already registered");
+            return true;
         }
-        for (int i = 0; i < swimmingPoolSubscriptions.length; i++) {
-            if (subscription.equals(swimmingPoolSubscriptions[i])) {
-                System.out.println("You are already registered in the swimming pool");
-                return true;
-            }
-        }
-        for (int i = 0; i < groupSessionSubscriptions.length; i++) {
-            if (subscription.equals(groupSessionSubscriptions[i])) {
-                System.out.println("You are already registered in the group session");
+        return false;
+    }
+
+    private boolean isAlreadyRegisteredInZone(Subscription subscription, Subscription[] zone) {
+        for (int i = 0; i < zone.length; i++) {
+            if (subscription.equals(zone[i])) {
                 return true;
             }
         }

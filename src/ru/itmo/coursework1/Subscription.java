@@ -6,17 +6,13 @@ public class Subscription {
     private SubscriptionType subscriptionType;
     private LocalDate registrationDate;
     private LocalDate expirationDate;
-    private String ownerFirstName;
-    private String ownerLastName;
-    private int ownerBirthYear;
+    private Client client;
 
-    public Subscription(SubscriptionType subscriptionType, LocalDate registrationDate, LocalDate expirationDate, String ownerFirstName, String ownerLastName, int ownerBirthYear) {
+    public Subscription(SubscriptionType subscriptionType, LocalDate registrationDate, LocalDate expirationDate, Client client) {
         this.subscriptionType = subscriptionType;
         this.registrationDate = registrationDate;
         setExpirationDate(expirationDate);
-        setOwnerFirstName(ownerFirstName);
-        setOwnerLastName(ownerLastName);
-        setOwnerBirthYear(ownerBirthYear);
+        this.client = client;
     }
 
     public SubscriptionType getSubscriptionType() {
@@ -37,27 +33,6 @@ public class Subscription {
         this.expirationDate = expirationDate;
     }
 
-    private void setOwnerFirstName(String ownerFirstName) {
-        if (ownerFirstName == null || ownerFirstName.equals("")) {
-            throw new IllegalArgumentException("Illegal first name");
-        }
-        this.ownerFirstName = ownerFirstName;
-    }
-
-    private void setOwnerLastName(String ownerLastName) {
-        if (ownerLastName == null || ownerLastName.equals("")) {
-            throw new IllegalArgumentException("Illegal last name");
-        }
-        this.ownerLastName = ownerLastName;
-    }
-
-    private void setOwnerBirthYear(int ownerBirthYear) {
-        if (ownerBirthYear > LocalDate.now().getYear() - 14 || ownerBirthYear < LocalDate.now().getYear() - 100) {
-            throw new IllegalArgumentException("Illegal birth year");
-        }
-        this.ownerBirthYear = ownerBirthYear;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -65,21 +40,20 @@ public class Subscription {
 
         Subscription subscription = (Subscription) o;
 
-        if (ownerBirthYear != subscription.ownerBirthYear) return false;
-        if (!ownerFirstName.equals(subscription.ownerFirstName)) return false;
-        return ownerLastName.equals(subscription.ownerLastName);
+        return client.equals(subscription.client);
     }
 
     @Override
     public int hashCode() {
-        int result = ownerFirstName.hashCode();
-        result = 31 * result + ownerLastName.hashCode();
-        result = 31 * result + ownerBirthYear;
+        int result = subscriptionType != null ? subscriptionType.hashCode() : 0;
+        result = 31 * result + (registrationDate != null ? registrationDate.hashCode() : 0);
+        result = 31 * result + (expirationDate != null ? expirationDate.hashCode() : 0);
+        result = 31 * result + (client != null ? client.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return ownerFirstName + " " + ownerLastName;
+        return client.toString();
     }
 }
